@@ -45,6 +45,10 @@ io.on('connection', function(socket)
 			else
 				io.emit("audio",nombre);
 		});
+	});
+	socket.on('streaming', function(stream)
+	{
+		
 	})
 });
 

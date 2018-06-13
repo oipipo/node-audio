@@ -7,6 +7,7 @@ var socket = io(),//declaro el socket para la comunicacion
     var duracion = document.getElementById('duracion');
     var blobArray=[];
     var nombre;
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 //obtengo datos del microfono 
 navigator.streaming=
 (   navigator.getUserMedia||
@@ -37,16 +38,26 @@ function errorGrabar(e)
 //grabar audio
 async function grabar(stream)
 {  
-    
     mediaRecorder = new MediaStreamRecorder(stream);
     mediaRecorder.stream = stream;
     mediaRecorder.mimeType = 'audio/wav';
     mediaRecorder.ondataavailable = function (blob) {
         blobArray.push(blob);
     };
-    mediaRecorder.start(parseInt(duracion.value,10)*1000);
     parar.disabled= false;
     guardar.disabled=false;
+    mediaRecorder.start(parseInt(duracion.value,10)*1000);
+    delay(parseInt(duracion.value,10)*1000-100)
+    .then(()=>
+    {
+        parar.disabled=true;
+        mediaRecorder.stop();
+        mediaRecorder.stream.stop();
+        empezar.disabled = false;
+        isStopped=true;
+        socket.emit("mensaje","se paro la grabacion");
+    }
+    );
 }
 
 //jueguito con los botones y jquery
@@ -67,7 +78,7 @@ parar.addEventListener('click',()=>
     mediaRecorder.stream.stop();
     empezar.disabled = false;
     isStopped=true;
-    socket.emit("mensaje","se paro la grabacion y se envio al servidor");
+    socket.emit("mensaje","se paro la grabacion");
 });
 guardar.addEventListener('click',()=>
 {
@@ -131,84 +142,6 @@ function inputValid(numero)
     }
 }
 
-/*
-    var socket = io.connect('http://localhost:3000', { 'forceNew': true });
-    socket.emit("message","usuario: 'audio client' conectado");
-    socket.on('message', function(data) {
-        document.getElementById("servidor").value=data;
-    });
-    $(document).ready(()=>
-    {
-        $("#iniciar").hide();
-    });
-    function grabar()
-    {
-        if (!hasGetUserMedia()) 
-        {
-            alert('getUserMedia() is not supported by your browser');
-        } 
-        else 
-        {
-            var constraints = { audio: true, video: false };
-            var promise = navigator.mediaDevices.getUserMedia(constraints)
-            .then(function(mediaStream)
-            {
-                document.getElementById('audio').srcObject = mediaStream;
-                audio.onloadedmetadata = function(e) 
-                {
-                    $(document).ready(()=>
-                    {
-                        socket.emit("message","inicio audio");
-                        audio.play();          
-                        $("#empezar").hide();
-                        $("#iniciar").show();
-                        $("#iniciar").click(()=>
-                        {
-                            socket.emit("message","inicio audio");
-                            audio.play();          
-                        });
-                            
-                        $("#pausa").click(()=>
-                        {
-                            socket.emit("message","pauso audio");
-                            audio.pause();          
-                        });
-                    });
-                };
-            })
-            .catch(function(err)
-            { 
-            alert("No tiene los permisos para grabar");
-            });
-        }
-    }
-    function hasGetUserMedia() 
-    {
-        if (navigator.mediaDevices === undefined) {
-            navigator.mediaDevices = {};
-        }
-        if (navigator.mediaDevices.getUserMedia === undefined) 
-        {
-            navigator.mediaDevices.getUserMedia = function(constraints) 
-            {
-        
-            // First get ahold of the legacy getUserMedia, if present
-            var getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-        
-            // Some browsers just don't implement it - return a rejected promise with an error
-            // to keep a consistent interface
-            if (!getUserMedia) {
-                return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
-            }
-        
-            // Otherwise, wrap the call to the old navigator.getUserMedia with a Promise
-            return new Promise(function(resolve, reject) {
-                getUserMedia.call(navigator, constraints, resolve, reject);
-            });
-            }
-        }
-        return true;
-}*/
 (function() {
     window.ConcatenateBlobs = async function(blobs, type, callback) {
         var buffers = [];
