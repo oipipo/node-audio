@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>audio-servidor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.1/darkly/bootstrap.min.css" rel="stylesheet" integrity="sha384-ae362vOLHy2F1EfJtpMbNW0i9pNM1TP2l5O4VGYYiLJKsaejqVWibbP6BSf0UU5i" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="  crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/socket.io-stream.js"></script>
+    <link rel="icon" href="https://png.pngtree.com/element_pic/00/16/10/215808f72875ed0.jpg">
+    <link rel="stylesheet" type="text/css" media="screen" href="css/main.css" />
+</head>
+<body>
+    <div class="row" style="background:navy">
+        <div class="col-md-16 mt-4 mx-auto" >
+            <h1 style="color: black">Audio Server</h1>
+        </div>
+    </div>
+    <div class="row">
+            <div class="col-md-4 mt-4 mx-auto" >
+            </div>
+            <div class="col-md-4 mt-4" >
+                    <audio id="audio" controls ></audio>
+                </div>
+            <div class="col-md-3 mt-4" >
+                <textarea id="servidor" row="10" cols="40" readonly></textarea>
+            </div>
+    </div>
+    <script src="/js/serv-main.js"></script>
+</body>
+</html>
