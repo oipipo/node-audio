@@ -23,7 +23,7 @@ app.get('/',(req, res)=>
 {
 	res.render("client",{});
 });
-server.listen(3000, ()=> {
+server.listen(process.env.PORT || 3000, ()=> {
 	console.log('Servidor corriendo en http://localhost:3000'); 	
 });	
 
