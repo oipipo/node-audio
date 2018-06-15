@@ -20,7 +20,10 @@
     "npm": "^6.1.0",
     "path": "^0.12.7",
     "require-all": "^2.2.0",
+    "simple-peer": "^9.1.2",
     "socket.io": "^2.1.1",
+    "socket.io-p2p": "^2.2.0",
+    "socket.io-p2p-server": "^1.2.0",
     "socket.io-stream": "^0.9.1"
   }
 }

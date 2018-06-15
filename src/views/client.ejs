@@ -10,34 +10,49 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/socket.io-stream.js"></script>
     <script src="/js/MediaStreamRecorder.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/0.3.9/peer.min.js"></script>
     <link rel="icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqlWmw0QtqrE0b5Xjh9Il0WwXXgrDDbQ1e4sXh5ZQGAWNfF81g">
     <link rel="stylesheet" type="text/css" media="screen" href="css/main.css" />
 </head>
 <body>
-    <div class="row" style="background:navy">
-        <div class="col-md-16 mt-4 mx-auto" >
-            <h1 style="color: black">Audio Client</h1>
+    <div class="container-fluid">
+        <div class="row" style="background:navy">
+            <div class="col-md-16 mt-4 mx-auto" >
+                <h1 style="color: black">Audio Client</h1>
+            </div>
         </div>
-    </div>
-    <div class="row h-80">
-            <div class="col-md-5 mt-4 mx-auto" >
-               <button  id="empezar">iniciar</button> 
-                <button id="parar" disabled>parar</button>
-                <button id="guardar" disabled>guardar</button>
-                <audio id="audio" controls></audio>
-                <p> inserte duracion maxima de audio en seg(maximo 5 minutos '300 segundos')</p>
-                <input id="duracion" type="text" value="60">
+        <div class="row align-items-center">
+                <div class="col-md-5 mx-auto" >
+                    <label class="label" for="duracion">duracion maxima en segundos</label>
+                    <br>
+                    <div class="col-md-10 mx-auto">
+                        <input id="duracion"  type="number" min="1" value="60" max="300"> <br> 
+                    </div>
+                    <br> 
+                    <button class="btn btn-info" id="empezar">iniciar</button> 
+                    <button class="btn btn-danger" id="parar" disabled>parar</button>
+                    <button class="btn btn-success" id="guardar" disabled>guardar</button>
+                </div>
+                <div class="col-md-4 mx-auto" >
+                    <audio id="audio" controls></audio>
+                </div>
+        </div>
+        
+        <hr>
+        <div class="row">
+            <div class="col-md-5 mx-auto">
+                <p>streamming de audio</p>
+                <button class="btn btn-info" id="start-stream"> iniciar streaming</button>
+                <button class="btn btn-danger" id="stop-stream" disabled>parar streaming</button>
             </div>
-
-            <div class="col-md-3 mt-4" >
-                <textarea id="servidor" row="10" cols="40" readonly></textarea>
+            <div class="col-md-4 mx-auto">
+                    <audio id="streaming" controls></audio>
             </div>
-    </div>
-    <div class="row">
-        <div class="col-md-5 mx-auto">
-            <p>streamming de audio</p>
-            <button id="streaming">streaming</button>
-            <button id="stop-stream">parar streaming</button>
+        </div>
+        <div class="fixed-bottom">
+            <div class="col-md-4">
+                <textarea id="servidor" row="1" cols="30" readonly></textarea>
+            </div>
         </div>
     </div>
     <script src="/js/cli-main.js"></script>

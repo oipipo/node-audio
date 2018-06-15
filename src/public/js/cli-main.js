@@ -1,66 +1,55 @@
 var socket = io(),//declaro el socket para la comunicacion
+    stream = ss.createStream(),
     //declaro los botones para manejo mas facil
     empezar=document.getElementById('empezar'),
     guardar=document.getElementById('guardar'),
-    parar=document.getElementById('parar');
-    var audio = document.getElementById('audio');
-    var duracion = document.getElementById('duracion');
-    var blobArray=[];
-    var nombre;
-    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-//obtengo datos del microfono 
-navigator.streaming=
-(   navigator.getUserMedia||
-    navigator.webkitGetUserMedia||
-    navigator.mozGetUserMedia||
-    navigator.msGetUserMedia
-);//varia dependiendo del navegador
-//defino que solo necesito audio
-var media={audio:true};
-var mediaRecorder;
-var blobArray=[];
-var isStopped=false;
+    parar=document.getElementById('parar'),
+    startStream=document.getElementById('start-stream'),
+    stopStream = document.getElementById('stop-stream'),
+    //declaro los elementos del html para manejo mas facil
+    audio = document.getElementById('audio'),//audio tag
+    streaming = document.getElementById('streaming'),//audio tag
+    duracion = document.getElementById('duracion'), //text tag
+    //variables para funciones y uso de js
+    blobArray=[],//para enviar audios
+    nombre,//nombre del audio
+    mediaRecorder,//el recorder para los audios
+    //mediaStreamer,//el recorder para los streaming
+    isStopped=false,//bandera para botones
+    media={audio:true};//parametros para getusermedia
+    var peer = new Peer({host: 'cloud.peer-js.com'});
+    var idRemote;
+    var call;
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));//funcion sleep
+    //obtengo datos del microfono  varia dependiendo del navegador
+    navigator.streaming=
+    (   
+        navigator.getUserMedia||
+        navigator.webkitGetUserMedia||
+        navigator.mozGetUserMedia||
+        navigator.msGetUserMedia
+    );
 //cuando recibo mensaje del servidor lo muestro en mi area de texto
+
 socket.on("mensaje",(data)=>
 {
-    document.getElementById('servidor').value+=data+"\n";
+    document.getElementById('servidor').value+=data+"\t";
 });
+//cuando recibo nombre de algun audio lo reproduzco
 socket.on('audio',(nombre)=>
 {
     audio.src="/audios/"+nombre;
+});
+//cuando conecto con el peer le mando el id
+
+socket.on('id',(id)=>
+{
+    idRemote=id;
+    socket.emit('mensaje',"se obtuvo el peerId");
 })
 
-//en caso de error
-function errorGrabar(e)
-{
-    alert("error: "+e);
-}
-//grabar audio
-async function grabar(stream)
-{  
-    mediaRecorder = new MediaStreamRecorder(stream);
-    mediaRecorder.stream = stream;
-    mediaRecorder.mimeType = 'audio/wav';
-    mediaRecorder.ondataavailable = function (blob) {
-        blobArray.push(blob);
-    };
-    parar.disabled= false;
-    guardar.disabled=false;
-    mediaRecorder.start(parseInt(duracion.value,10)*1000);
-    delay(parseInt(duracion.value,10)*1000-100)
-    .then(()=>
-    {
-        parar.disabled=true;
-        mediaRecorder.stop();
-        mediaRecorder.stream.stop();
-        empezar.disabled = false;
-        isStopped=true;
-        socket.emit("mensaje","se paro la grabacion");
-    }
-    );
-}
-
 //jueguito con los botones y jquery
+//Audio
 empezar.addEventListener('click',()=>
 {
     if(inputValid(duracion.value))
@@ -99,16 +88,6 @@ guardar.addEventListener('click',()=>
     })
     socket.emit("mensaje","se guardo la grabacion");
 });
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-String.prototype.replaceAll = function(search, replacement) {
-    var target = this;
-    return target.replace(new RegExp(search, 'g'), replacement);
-};
-
 duracion.addEventListener("input",()=>
 {
     duracion.value=duracion.value.replace(/\D/g,'');
@@ -118,6 +97,70 @@ duracion.addEventListener("paste",()=>
 {
     duracion.value=duracion.value.replace(/\D/g,'');
 });
+//Stream
+startStream.addEventListener("click",()=>
+{
+    startStream.disabled=true;
+    stopStream.disabled=false;
+    navigator.streaming(media,streamer,errorGrabar);
+    
+});
+
+stopStream.addEventListener("click",()=>
+{
+    stopStream.disabled=true;
+    startStream.disabled=false;
+    call=null;
+    streaming.srcObject=null;
+});
+
+//grabar audio
+async function grabar(stream)
+{  
+    mediaRecorder = new MediaStreamRecorder(stream);
+    mediaRecorder.stream = stream;
+    mediaRecorder.mimeType = 'audio/wav';
+    mediaRecorder.ondataavailable = function (blob) {
+        blobArray.push(blob);
+    };
+    parar.disabled= false;
+    guardar.disabled=false;
+    mediaRecorder.start(parseInt(duracion.value,10)*1000);
+    delay(parseInt(duracion.value,10)*1000-1)
+    .then(()=>
+    {
+        parar.disabled=true;
+        mediaRecorder.stop();
+        mediaRecorder.stream.stop();
+        empezar.disabled = false;
+        isStopped=true;
+        socket.emit("mensaje","se paro la grabacion");
+    }
+    );
+}
+// stream audio
+async function streamer(stream)
+{
+    if(idRemote)
+    {
+        call = peer.call(String(idRemote),stream);
+        call.on('stream',(remoteStream)=>
+    {
+        streaming.srcObject=remoteStream;
+    })
+    }else
+    {
+        alert('necesita conexion con el servidor');
+    }
+}
+
+//funcion para String
+String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.replace(new RegExp(search, 'g'), replacement);
+};
+
+//funcion validar duracion de audio
 function inputValid(numero)
 {
     if(numero =="")
@@ -133,6 +176,7 @@ function inputValid(numero)
     }else{
         if(parseInt(numero,10)>300)
         {
+            duracion.value=300;
             alert("la duracion maxima para el audio son 5 minutos");
             return false
         }else
@@ -141,9 +185,15 @@ function inputValid(numero)
         }
     }
 }
-
+//en caso de error
+function errorGrabar(e)
+{
+    alert("error: "+e);
+}
+//concatenar blobs para audio
 (function() {
-    window.ConcatenateBlobs = async function(blobs, type, callback) {
+    window.ConcatenateBlobs = async function(blobs, type, callback) 
+    {
         var buffers = [];
 
         var index = 0;
@@ -163,7 +213,8 @@ function inputValid(numero)
 
         readAsArrayBuffer();
 
-        function concatenateBuffers() {
+        function concatenateBuffers() 
+        {
             var byteLength = 0;
             buffers.forEach(function(buffer) {
                 byteLength += buffer.byteLength;
@@ -187,5 +238,7 @@ function inputValid(numero)
 
             callback(blob);
         }
+        
     };
+    
 })();

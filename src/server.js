@@ -5,7 +5,8 @@ const 	express= require('express'),
 		ss = require('socket.io-stream'),
 		path = require('path'),
 		fs = require('fs'),
-		stream= ss.createStream();
+		Peer = require('simple-peer'),
+		//stream= ss.createStream();
 		publicDir =express.static(path.join(__dirname,'public'));//definir ruta publica
 
 //configurar las rutas
@@ -28,8 +29,6 @@ server.listen(3000, ()=> {
 
 io.on('connection', function(socket) 
 {
-	
-	
 	socket.emit("mensaje","conecto con el servidor");
 	socket.on('mensaje', function(mensaje) 
 	{
@@ -46,9 +45,9 @@ io.on('connection', function(socket)
 				io.emit("audio",nombre);
 		});
 	});
-	socket.on('streaming', function(stream)
+	socket.on('id', (id)=>
 	{
-		
+		socket.broadcast.emit('id',id);
 	})
 });
 
