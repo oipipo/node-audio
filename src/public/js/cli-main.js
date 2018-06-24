@@ -1,55 +1,45 @@
-var socket = io(),//declaro el socket para la comunicacion
-    stream = ss.createStream(),
-    //declaro los botones para manejo mas facil
-    empezar=document.getElementById('empezar'),
-    guardar=document.getElementById('guardar'),
-    parar=document.getElementById('parar'),
-    startStream=document.getElementById('start-stream'),
-    stopStream = document.getElementById('stop-stream'),
-    //declaro los elementos del html para manejo mas facil
-    audio = document.getElementById('audio'),//audio tag
-    streaming = document.getElementById('streaming'),//audio tag
-    duracion = document.getElementById('duracion'), //text tag
-    //variables para funciones y uso de js
-    blobArray=[],//para enviar audios
-    nombre,//nombre del audio
-    mediaRecorder,//el recorder para los audios
-    //mediaStreamer,//el recorder para los streaming
-    isStopped=false,//bandera para botones
-    media={audio:true};//parametros para getusermedia
-    var peer = new Peer({host: 'cloud.peer-js.com'});
-    var idRemote;
-    var call;
-    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));//funcion sleep
-    //obtengo datos del microfono  varia dependiendo del navegador
-    navigator.streaming=
-    (   
-        navigator.getUserMedia||
-        navigator.webkitGetUserMedia||
-        navigator.mozGetUserMedia||
-        navigator.msGetUserMedia
-    );
-//cuando recibo mensaje del servidor lo muestro en mi area de texto
+var 
+//SOCKET
+socket = io(),
+//BOTONES
+empezar=document.getElementById('empezar'),
+guardar=document.getElementById('guardar'),
+parar=document.getElementById('parar'),
+startStream=document.getElementById('start-stream'),
+stopStream = document.getElementById('stop-stream'),
+//TAGS
+streaming = document.getElementById('streaming'),//audio tag
+duracion = document.getElementById('duracion'), //text tag
+conectado = document.getElementById('conectado'), //text tag
+//VARIABLES
+//AUDIOS
+blobArray=[],
+nombre,
+mediaRecorder,
+isStopped=false,
+media={audio:true,video:false};
+//STREAMING
+const peer = new Peer({host: location.hostname, port: location.port|| (location.protocol === 'https:' ? 3001 : 3000),  path: '/peerjs', });
+var idRemote;
+//SLEEP FUNCTION
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+//GET USER MEDIA 
+navigator.streaming=
+(   
+    navigator.getUserMedia||
+    navigator.webkitGetUserMedia||
+    navigator.mozGetUserMedia||
+    navigator.msGetUserMedia
+);
+conectado.style.backgroundColor='red';
 
-socket.on("mensaje",(data)=>
-{
-    document.getElementById('servidor').value+=data+"\t";
-});
-//cuando recibo nombre de algun audio lo reproduzco
-socket.on('audio',(nombre)=>
-{
-    audio.src="/audios/"+nombre;
-});
-//cuando conecto con el peer le mando el id
+    socket.on('id',(id)=>
+    {
+        idRemote=id;
+        conectado.style.backgroundColor='green';
+    });
 
-socket.on('id',(id)=>
-{
-    idRemote=id;
-    socket.emit('mensaje',"se obtuvo el peerId");
-})
-
-//jueguito con los botones y jquery
-//Audio
+//BOTONES AUDIO
 empezar.addEventListener('click',()=>
 {
     if(inputValid(duracion.value))
@@ -79,25 +69,17 @@ guardar.addEventListener('click',()=>
         mediaRecorder.stop();
         mediaRecorder.stream.stop();
     }
-    ConcatenateBlobs(blobArray, blobArray[0].type,(result)=>
-    {
-        var date = new Date();
-        nombre = date.toISOString().replaceAll(':','').replace(/\..+/,'')+".wav";
-        socket.emit("audio",result,nombre);
-        blobArray=[];
-    })
-    socket.emit("mensaje","se guardo la grabacion");
+    groupAndSend();
 });
 duracion.addEventListener("input",()=>
 {
     duracion.value=duracion.value.replace(/\D/g,'');
 });
-
 duracion.addEventListener("paste",()=>
 {
     duracion.value=duracion.value.replace(/\D/g,'');
 });
-//Stream
+//BOTONES STREAM
 startStream.addEventListener("click",()=>
 {
     startStream.disabled=true;
@@ -110,11 +92,11 @@ stopStream.addEventListener("click",()=>
 {
     stopStream.disabled=true;
     startStream.disabled=false;
-    call=null;
     streaming.srcObject=null;
+    socket.emit('endcall','');
 });
 
-//grabar audio
+//FUNCION AUDIO
 async function grabar(stream)
 {  
     mediaRecorder = new MediaStreamRecorder(stream);
@@ -138,23 +120,26 @@ async function grabar(stream)
     }
     );
 }
-// stream audio
+// FUNCION STREAM
 async function streamer(stream)
 {
     if(idRemote)
     {
-        call = peer.call(String(idRemote),stream);
+        var call = peer.call(String(idRemote),stream);
         call.on('stream',(remoteStream)=>
-    {
-        streaming.srcObject=remoteStream;
-    })
+        {
+            streaming.srcObject=remoteStream;
+            streaming.play();
+        });
     }else
     {
         alert('necesita conexion con el servidor');
+        stopStream.disabled=true;
+        startStream.disabled=false;
     }
 }
 
-//funcion para String
+//FUNCION STRING
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
     return target.replace(new RegExp(search, 'g'), replacement);
@@ -166,12 +151,14 @@ function inputValid(numero)
     if(numero =="")
     {
         alert("campo de duracion esta vacio");
+        duracion.value=60;
         return false;
         
     }
     if(parseInt(numero,10)<=0)
     {
         alert("se debe colocar duracion mayor que 0");
+        duracion.value=1;
         return false;
     }else{
         if(parseInt(numero,10)>300)
@@ -188,7 +175,25 @@ function inputValid(numero)
 //en caso de error
 function errorGrabar(e)
 {
-    alert("error: "+e);
+    if(e!='NotFoundError: Requested device not found')
+    {
+        alert("error: "+e);
+    }else
+    {
+        //si no tiene mic
+        alert('se necesita microfono para hacer llamada')
+    }
+}
+function groupAndSend()
+{
+    ConcatenateBlobs(blobArray, blobArray[0].type,(result)=>
+    {
+        var date = new Date();
+        nombre = date.toISOString().replaceAll(':','').replace(/\..+/,'')+".wav";
+        socket.emit("audio",result,nombre);
+        blobArray=[];
+    })
+    socket.emit("mensaje","se guardo la grabacion");
 }
 //concatenar blobs para audio
 (function() {

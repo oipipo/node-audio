@@ -7,10 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.1/darkly/bootstrap.min.css" rel="stylesheet" integrity="sha384-ae362vOLHy2F1EfJtpMbNW0i9pNM1TP2l5O4VGYYiLJKsaejqVWibbP6BSf0UU5i" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="  crossorigin="anonymous"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript"  src="/socket.io/socket.io.js"></script>
     <script src="/js/socket.io-stream.js"></script>
     <script src="/js/MediaStreamRecorder.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/0.3.9/peer.min.js"></script>
+    <script src="/js/peer.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/is_js/0.9.0/is.js"></script>
     <link rel="icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqlWmw0QtqrE0b5Xjh9Il0WwXXgrDDbQ1e4sXh5ZQGAWNfF81g">
     <link rel="stylesheet" type="text/css" media="screen" href="css/main.css" />
 </head>
@@ -34,27 +35,31 @@
                     <button class="btn btn-success" id="guardar" disabled>guardar</button>
                 </div>
                 <div class="col-md-4 mx-auto" >
-                    <audio id="audio" controls></audio>
+                    <audio class="audio" controls></audio>
                 </div>
         </div>
         
         <hr>
         <div class="row">
-            <div class="col-md-5 mx-auto">
+            <div class="col-md-3 mx-auto">
                 <p>streamming de audio</p>
                 <button class="btn btn-info" id="start-stream"> iniciar streaming</button>
                 <button class="btn btn-danger" id="stop-stream" disabled>parar streaming</button>
             </div>
+            <div class="col-md-1 mx-auto">
+                    <span id="conectado">Conectado</span>
+            </div>
             <div class="col-md-4 mx-auto">
-                    <audio id="streaming" controls></audio>
+                <audio id="streaming" controls></audio>
             </div>
         </div>
         <div class="fixed-bottom">
             <div class="col-md-4">
-                <textarea id="servidor" row="1" cols="30" readonly></textarea>
+                <textarea class="servidor" row="1" cols="30" readonly></textarea>
             </div>
         </div>
     </div>
     <script src="/js/cli-main.js"></script>
+    <script src="/js/mix.js"></script>
 </body>
 </html>

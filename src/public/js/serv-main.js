@@ -1,9 +1,12 @@
 var socket = io();
-var audio = document.getElementById('audio');
 var stream = document.getElementById('stream');
-var servidor = document.getElementById('servidor');
-var peer = new Peer({host: 'cloud.peer-js.com'});
-var id;
+var peer = new Peer({host: location.hostname,
+    port: location.port|| (location.protocol === 'https:' ? 3001 : 3000),   path: '/peerjs',
+    });
+var enviarId = document.getElementById('enviarId');
+var conectado = document.getElementById('conectado');
+var idserv;
+conectado.style.backgroundColor='red';
 navigator.streaming=
 (   
     navigator.getUserMedia||
@@ -13,43 +16,38 @@ navigator.streaming=
 );
 peer.on('open',function(id)
 {
-    socket.emit('id',id);
-    socket.emit('mensaje',"se envio el peerId");
+    idserv=id;
 });
 peer.on('call',function(call)
 {
     navigator.streaming({audio:true},(stream)=>
     {
         call.answer(stream);
-    },errorGrabar);
+    },(e)=>
+    {
+        if(e!='NotFoundError: Requested device not found')
+        {
+            alert("error: "+e);
+        }else
+        {
+            call.answer();
+        }
+    });
     
     call.on('stream',(remoteStream)=>
     {
         stream.srcObject=remoteStream;
+        stream.play();
+        socket.on('endcall',(empty)=>
+        {
+            stream.srcObject=null;
+        })
     })
+    
 });
 
-peer.on('connection', function(conn)
+enviarId.addEventListener('click',()=>
 {
-    conn.on('data',(data)=>
-    {
-        console.log(data);
-    })
+    conectado.style.backgroundColor='green';
+    socket.emit('id',idserv);
 })
-socket.on('peer-id',(id)=>
-{
-    idConnected=id;
-})
-socket.on('mensaje',(data)=>
-{
-    servidor.value+=data+"\t";
-});
-socket.on('audio',(nombre)=>
-{
-    audio.src="/audios/"+nombre;
-});
-
-function errorGrabar(e)
-{
-    alert("error: "+e);
-}
